@@ -1,12 +1,10 @@
 """
 Flight Log Analyzer - анализатор полётных логов для обнаружения аномалий.
-
-Задание: реализуйте функции для анализа данных полёта
-и обнаружения различных типов аномалий.
 """
 
 import pandas as pd
-from typing import Any
+import numpy as np
+from typing import Any, Dict, List, Optional
 
 
 def load_flight_log(filepath: str) -> pd.DataFrame:
@@ -21,16 +19,13 @@ def load_flight_log(filepath: str) -> pd.DataFrame:
         groundspeed, airspeed, heading, roll, pitch, yaw,
         battery_voltage, battery_remaining, gps_fix, satellites
     """
-    # TODO: Реализуйте загрузку CSV файла
-    # Подсказка: используйте pd.read_csv()
-    
+
     df = pd.read_csv(filepath)
     return df
-    
-    pass
 
 
-def detect_altitude_anomalies(df: pd.DataFrame, threshold: float = 10.0) -> list[dict]:
+
+def detect_altitude_anomalies(df: pd.DataFrame, threshold: float = 10.0) -> List[Dict]:
     """
     Находит резкие изменения высоты.
     
@@ -48,21 +43,28 @@ def detect_altitude_anomalies(df: pd.DataFrame, threshold: float = 10.0) -> list
         - new_value: новое значение высоты
         - change: величина изменения
     """
-    # TODO: Реализуйте обнаружение аномалий высоты
-    #
-    # Подсказка:
-    # 1. Используйте df['relative_alt'].diff() для вычисления разницы
-    # 2. Найдите строки где abs(diff) > threshold
-    # 3. Для каждой аномалии создайте словарь с нужными полями
-    
     anomalies = []
     
-    # Ваш код здесь
+    # Вычисляем разницу высот между соседними записями
+    alt_diff = df['relative_alt'].diff()
+    
+    # Находим индексы, где абсолютная разница превышает порог
+    anomaly_indices = np.where(abs(alt_diff) > threshold)[0]
+    
+    for idx in anomaly_indices:
+
+        anomaly = {
+            'timestamp': df.iloc[idx]['timestamp'],
+            'old_value': df.iloc[idx-1]['relative_alt'],
+            'new_value': df.iloc[idx]['relative_alt'],
+            'change': alt_diff.iloc[idx]
+        }
+        anomalies.append(anomaly)
     
     return anomalies
 
 
-def detect_gps_anomalies(df: pd.DataFrame, min_satellites: int = 6) -> list[dict]:
+def detect_gps_anomalies(df: pd.DataFrame, min_satellites: int = 6) -> List[Dict]:
     """
     Находит потерю GPS сигнала.
     
@@ -78,22 +80,29 @@ def detect_gps_anomalies(df: pd.DataFrame, min_satellites: int = 6) -> list[dict
         - satellites: количество спутников
         - fix_type: тип фиксации GPS
     """
-    # TODO: Реализуйте обнаружение GPS аномалий
-    #
-    # Подсказка:
-    # 1. Фильтруйте строки: (satellites < min_satellites) | (gps_fix < 3)
-    # 2. Для каждой строки создайте словарь с нужными полями
-    
     anomalies = []
     
-    # Ваш код здесь
+    if df is None:
+        return anomalies
+    
+    # Фильтруем строки с аномалиями
+    anomaly_mask = (df['satellites'] < min_satellites) | (df['gps_fix'] < 3)
+    anomaly_rows = df[anomaly_mask]
+    
+    for _, row in anomaly_rows.iterrows():
+        anomaly = {
+            'timestamp': row['timestamp'],
+            'satellites': row['satellites'],
+            'fix_type': row['gps_fix']
+        }
+        anomalies.append(anomaly)
     
     return anomalies
 
 
 def detect_battery_anomalies(df: pd.DataFrame,
                              min_voltage: float = 10.5,
-                             min_percent: int = 20) -> list[dict]:
+                             min_percent: int = 20) -> List[Dict]:
     """
     Находит критические уровни батареи.
     
@@ -111,16 +120,37 @@ def detect_battery_anomalies(df: pd.DataFrame,
         - remaining: уровень заряда в %
         - reason: причина ('low_voltage' или 'low_charge')
     """
-    # TODO: Реализуйте обнаружение аномалий батареи
-    
     anomalies = []
     
-    # Ваш код здесь
+    if df is None:
+        return anomalies
+    
+    # Проверяем каждую строку
+    for _, row in df.iterrows():
+        reasons = []
+        
+        if row['battery_voltage'] < min_voltage:
+            reasons.append('low_voltage')
+        
+        if row['battery_remaining'] < min_percent:
+            reasons.append('low_charge')
+        
+        # Если есть хотя бы одна причина, добавляем аномалию
+        if reasons:
+            # Для каждой причины создаём отдельную запись
+            for reason in reasons:
+                anomaly = {
+                    'timestamp': row['timestamp'],
+                    'voltage': row['battery_voltage'],
+                    'remaining': row['battery_remaining'],
+                    'reason': reason
+                }
+                anomalies.append(anomaly)
     
     return anomalies
 
 
-def detect_speed_anomalies(df: pd.DataFrame, max_speed: float = 20.0) -> list[dict]:
+def detect_speed_anomalies(df: pd.DataFrame, max_speed: float = 20.0) -> List[Dict]:
     """
     Находит превышение скорости.
     
@@ -135,16 +165,26 @@ def detect_speed_anomalies(df: pd.DataFrame, max_speed: float = 20.0) -> list[di
         - timestamp: время аномалии
         - speed: скорость в м/с
     """
-    # TODO: Реализуйте обнаружение превышения скорости
-    
     anomalies = []
     
-    # Ваш код здесь
+    if df is None:
+        return anomalies
+    
+    # Фильтруем строки с превышением скорости
+    speed_mask = df['groundspeed'] > max_speed
+    speed_anomalies = df[speed_mask]
+    
+    for _, row in speed_anomalies.iterrows():
+        anomaly = {
+            'timestamp': row['timestamp'],
+            'speed': row['groundspeed']
+        }
+        anomalies.append(anomaly)
     
     return anomalies
 
 
-def detect_attitude_anomalies(df: pd.DataFrame, max_rate: float = 0.5) -> list[dict]:
+def detect_attitude_anomalies(df: pd.DataFrame, max_rate: float = 0.5) -> List[Dict]:
     """
     Находит нестабильное положение.
     
@@ -162,21 +202,34 @@ def detect_attitude_anomalies(df: pd.DataFrame, max_rate: float = 0.5) -> list[d
         - roll_rate: скорость изменения крена
         - pitch_rate: скорость изменения тангажа
     """
-    # TODO: Реализуйте обнаружение нестабильного положения
-    #
-    # Подсказка:
-    # 1. Вычислите diff() для roll и pitch
-    # 2. Найдите строки где abs(roll_diff) > max_rate ИЛИ abs(pitch_diff) > max_rate
-    
     anomalies = []
     
-    # Ваш код здесь
+    if df is None or len(df) < 2:
+        return anomalies
+    
+    # Вычисляем скорость изменения углов
+    roll_rate = df['roll'].diff().abs()
+    pitch_rate = df['pitch'].diff().abs()
+    
+    # Находим индексы, где скорость изменения превышает порог
+    anomaly_indices = np.where((roll_rate > max_rate) | (pitch_rate > max_rate))[0]
+    
+    for idx in anomaly_indices:
+        if idx > 0 and idx < len(df):
+            anomaly = {
+                'timestamp': df.iloc[idx]['timestamp'],
+                'roll': df.iloc[idx]['roll'],
+                'pitch': df.iloc[idx]['pitch'],
+                'roll_rate': roll_rate.iloc[idx],
+                'pitch_rate': pitch_rate.iloc[idx]
+            }
+            anomalies.append(anomaly)
     
     return anomalies
 
 
-def generate_report(anomalies: dict[str, list[dict]], 
-                    df: pd.DataFrame | None = None) -> str:
+def generate_report(anomalies: Dict[str, List[Dict]], 
+                    df: Optional[pd.DataFrame] = None) -> str:
     """
     Генерирует текстовый отчёт об аномалиях.
     
@@ -187,24 +240,79 @@ def generate_report(anomalies: dict[str, list[dict]],
     Returns:
         Строка с отформатированным отчётом
     """
-    # TODO: Реализуйте генерацию отчёта
-    #
-    # Формат:
-    # === FLIGHT LOG ANALYSIS REPORT ===
-    # 
-    # Total records: N
-    # Flight duration: M seconds
-    # 
-    # --- ALTITUDE ANOMALIES (X found) ---
-    # [timestamp] Description...
-    # 
-    # ... остальные категории ...
-    #
-    # === END OF REPORT ===
-    
     lines = ["=== FLIGHT LOG ANALYSIS REPORT ===", ""]
     
-    # Ваш код здесь
+    # Общая статистика
+    if df is not None:
+        total_records = len(df)
+        lines.append(f"Total records: {total_records}")
+        
+        if total_records > 1:
+            # Вычисляем длительность полёта
+            duration = df['timestamp'].iloc[-1] - df['timestamp'].iloc[0]
+            lines.append(f"Flight duration: {duration} seconds")
+        else:
+            lines.append("Flight duration: N/A")
+    else:
+        lines.append("Total records: N/A")
+        lines.append("Flight duration: N/A")
+    
+    lines.append("")
+    
+    # Категории аномалий в нужном порядке
+    categories = [
+        ('altitude', 'ALTITUDE ANOMALIES'),
+        ('gps', 'GPS ANOMALIES'),
+        ('battery', 'BATTERY ANOMALIES'),
+        ('speed', 'SPEED ANOMALIES'),
+        ('attitude', 'ATTITUDE ANOMALIES')
+    ]
+    
+    for key, title in categories:
+        anomaly_list = anomalies.get(key, [])
+        count = len(anomaly_list)
+        
+        lines.append(f"--- {title} ({count} found) ---")
+        
+        if count == 0:
+            lines.append("No anomalies detected.")
+        else:
+            for anomaly in anomaly_list:
+                timestamp = anomaly.get('timestamp', 'N/A')
+                
+                if key == 'altitude':
+                    lines.append(
+                        f"[{timestamp}] Rapid altitude change: "
+                        f"{anomaly['old_value']:.1f}m -> {anomaly['new_value']:.1f}m "
+                        f"(Δ{anomaly['change']:.1f}m)"
+                    )
+                
+                elif key == 'gps':
+                    lines.append(
+                        f"[{timestamp}] GPS signal degraded: "
+                        f"{anomaly['satellites']} satellites, fix_type={anomaly['fix_type']}"
+                    )
+                
+                elif key == 'battery':
+                    reason_text = "Low voltage" if anomaly['reason'] == 'low_voltage' else "Low charge"
+                    lines.append(
+                        f"[{timestamp}] Battery {reason_text}: "
+                        f"{anomaly['voltage']:.2f}V, {anomaly['remaining']}%"
+                    )
+                
+                elif key == 'speed':
+                    lines.append(
+                        f"[{timestamp}] Speed exceeded: {anomaly['speed']:.1f} m/s"
+                    )
+                
+                elif key == 'attitude':
+                    lines.append(
+                        f"[{timestamp}] Unstable attitude: "
+                        f"roll={anomaly['roll']:.2f}, pitch={anomaly['pitch']:.2f} "
+                        f"(Δroll={anomaly['roll_rate']:.2f}, Δpitch={anomaly['pitch_rate']:.2f})"
+                    )
+        
+        lines.append("")
     
     lines.append("=== END OF REPORT ===")
     

@@ -21,6 +21,7 @@ MSG_GLOBAL_POSITION_INT = 33
 MSG_VFR_HUD = 74
 
 
+
 def parse_mavlink_file(filepath: str) -> list[dict]:
     """
     Парсит бинарный MAVLink файл и возвращает список сообщений.
@@ -46,64 +47,56 @@ def parse_mavlink_file(filepath: str) -> list[dict]:
         - sequence: sequence number
         - payload: байты payload
     """
-    # TODO: Реализуйте парсинг MAVLink файла
-    # 
-    # Подсказка:
-    # 1. Откройте файл в бинарном режиме
-    # 2. Ищите стартовый байт 0xFE
-    # 3. Читайте заголовок (5 байт после STX)
-    # 4. Читайте payload согласно полю LEN
-    # 5. Пропускайте CRC (2 байта)
-    # 6. Добавляйте сообщение в список
-    
+
     messages = []
 
+    # Чтение бинарного файла
     with open(filepath, 'rb') as f:
         data = f.read()
     
+    # Парсинг файла в список словарей messages
     i = 0
     data_len = len(data)
-    
+
     while i < data_len:
-        # Ищем стартовый байт 0xFE (MAVLink v1)
+
+        # Поиск стартового байта пакета 0xFE
         if data[i] != 0xFE:
             i += 1
             continue
         
-        # Читаем заголовок (5 байт после STX)
-        # LEN, SEQ, SYS, COMP, MSG
-        header = data[i+1:i+6]  # 5 байт
-        payload_len = header[0]
+        # Извлекается заголовок header
+        # LEN, SEQ, SYS, COMP, MSG, STX не сохраняется
+        header = data[i:i+6]
+        payload_len = header[1]
+        seq = header[2]
+        sys_id = header[3]
+        comp_id = header[4]
+        msg_id = header[5]
         
-        # Извлекаем поля
-        seq = header[1]
-        sys_id = header[2]
-        comp_id = header[3]
-        msg_id = header[4]
-        
-        # Payload
+        # Извлекается полезная нагрузка  payload
         payload_start = i + 6
         payload = data[payload_start:payload_start + payload_len]
         
-        # CRC (два байта, little-endian)
+        # Извлекается контрольная сумма CRC
         crc_start = payload_start + payload_len
-        crc = struct.unpack('<H', data[crc_start:crc_start+2])[0]
+        crc = data[crc_start : crc_start + 2][0]
         
-        # Сохраняем сообщение
+        # Добавление в список словарей
         messages.append({
-            'msg_id': msg_id,
+            'payload_len': payload_len,
+            'sequence': seq,
             'system_id': sys_id,
             'component_id': comp_id,
-            'sequence': seq,
+            'msg_id': msg_id,
             'payload': payload,
             'crc': crc 
         })
-        
-        # Переходим к следующему байту после окончания текущего пакета
 
-        # Вычисляем полный размер пакета: STX(1) + заголовок(5) + payload + CRC(2)
-        packet_end = i + 6 + payload_len + 2
-        i = packet_end
+        # Перестановка i на следующий байт после прохода пакета
+        header_len = 6
+        crc_len = 2
+        i = i + header_len + payload_len + crc_len
 
     return messages
 
@@ -134,35 +127,26 @@ def extract_gps_data(messages: list[dict]) -> list[dict]:
         - alt: высота в метрах
         - relative_alt: относительная высота в метрах
     """
-    # TODO: Реализуйте извлечение GPS данных
-    #
-    # Подсказка:
-    # 1. Фильтруйте сообщения по msg_id == MSG_GLOBAL_POSITION_INT
-    # 2. Используйте struct.unpack('<IiiiihhhH', payload) для распаковки
-    # 3. Конвертируйте: lat/lon делите на 1e7, alt/relative_alt делите на 1000
     
     gps_data = []
     
-    # Формат распаковки: < (little-endian), I (uint32), i (int32) x4, h (int16) x3, H (uint16)
-    fmt = '<IiiiihhhH'
-    expected_size = struct.calcsize(fmt)  # должно быть 28
-
+    # Распаковка сообщений только с индентификатором равным MSG_GLOBAL_POSITION_INT
     for msg in messages:
-        if msg['msg_id'] != MSG_GLOBAL_POSITION_INT:  # Только GLOBAL_POSITION_INT
+        if msg['msg_id'] != MSG_GLOBAL_POSITION_INT:  
             continue
 
         payload = msg['payload']
 
-        # Распаковываем кортеж из 9 элементов
-        (time_boot_ms, lat, lon, alt, relative_alt, vx, vy, vz, hdg) = struct.unpack(fmt, payload)
+        # Распаковка с little-endian
+        (time_boot_ms, lat, lon, alt, relative_alt, vx, vy, vz, hdg) = struct.unpack('<IiiiihhhH', payload)
 
-        # Преобразуем в физические величины
+        # Преобразование в физические величины и добавление в список словаря
         gps_entry = {
-            'timestamp': time_boot_ms / 1000.0,        # секунды
-            'lat': lat / 1e7,                           # градусы
-            'lon': lon / 1e7,                           # градусы
-            'alt': alt / 1000.0,                         # метры
-            'relative_alt': relative_alt / 1000.0        # метры
+            'timestamp': time_boot_ms / 1000.0,        
+            'lat': lat / 1e7,                           
+            'lon': lon / 1e7,                           
+            'alt': alt / 1000.0,                         
+            'relative_alt': relative_alt / 1000.0        
         }
         gps_data.append(gps_entry)
     
@@ -191,22 +175,20 @@ def extract_speed_data(messages: list[dict]) -> list[dict]:
         - climb: вертикальная скорость м/с
         - heading: курс в градусах
     """
-    # TODO: Реализуйте извлечение данных о скорости
-    #
-    # Подсказка:
-    # 1. Фильтруйте сообщения по msg_id == MSG_VFR_HUD
-    # 2. Используйте struct.unpack('<ffffhH', payload) для распаковки
-    
+
     speed_data = []
     
+    # Распаковка сообщений только с индентификатором равным MSG_VFR_HUD
     for msg in messages:
         if(msg['msg_id'] != MSG_VFR_HUD):
             continue
     
         payload = msg['payload']
-        fmt = '<ffffhH'
-        (airspeed, groundspeed, alt, climb, heading, throttle) = struct.unpack(fmt, payload)
 
+        # Распаковка с little-endian
+        (airspeed, groundspeed, alt, climb, heading, throttle) = struct.unpack('<ffffhH', payload)
+
+        # Преобразование в словарь и добавление словаря в список
         stat = {
             'airspeed' : airspeed,
             'groundspeed' : groundspeed,
@@ -280,18 +262,21 @@ def calculate_flight_stats(gps_data: list[dict], speed_data: list[dict]) -> dict
         'duration': 0.0,
     }
 
+    # Нахождение наибольшей высоты
     max_altitude = 0.0
     for gps in gps_data:
         if max_altitude < gps['relative_alt']:
             max_altitude = gps['relative_alt']
     stats['max_altitude'] = max_altitude
     
+    # Наименьшая высота
     min_altitude = max_altitude
     for gps in gps_data:
         if min_altitude < gps['relative_alt']:
             min_altitude = gps['relative_alt']
     stats['min_altitude'] = min_altitude
 
+    # Средняя скорость
     speed_sum = 0
     if len(speed_data) != 0:
         for speed in speed_data:
@@ -299,12 +284,14 @@ def calculate_flight_stats(gps_data: list[dict], speed_data: list[dict]) -> dict
         avg_speed = speed_sum / len(speed_data)
         stats['avg_speed'] = avg_speed
 
+    # Наибольшая скорость
     max_speed = 0.0
     for speed in speed_data:
         if max_speed < speed['groundspeed']:
             max_speed = speed['groundspeed']
     stats['max_speed'] = max_speed
 
+    # Общее пройденное расстояние
     size_gps = len(gps_data)
     distance = 0.0
     for i in range (1, size_gps):
@@ -313,6 +300,7 @@ def calculate_flight_stats(gps_data: list[dict], speed_data: list[dict]) -> dict
         distance = distance + haversine_distance(gps_start['lat'], gps_start['lon'], gps_end['lat'], gps_end['lon'])
     stats['distance'] = distance
 
+    # Общее время полета
     if len(gps_data) > 1:
         timestamp = gps_data[len(gps_data) - 1]['timestamp'] - gps_data[0]['timestamp']
 
