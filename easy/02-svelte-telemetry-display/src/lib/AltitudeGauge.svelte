@@ -4,14 +4,14 @@
   export let color: string;
 
   let lastAltitude = altitude;
-  let arrow = ' ';
+  let arrow = " ";
   
+  // Вычисление изменения высоты
   $: {
     arrow = altitude > lastAltitude ? '⬆' : altitude < lastAltitude ? '⬇' : '•';
     lastAltitude = altitude;
   }
-  
-  // Реактивные вычисления
+
   $: formattedAltitude = altitude.toFixed(0);
 </script>
 

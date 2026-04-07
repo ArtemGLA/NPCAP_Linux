@@ -1,10 +1,10 @@
 <script lang="ts">
   export let speed: number;
   
-  // Определяем направление стрелки
   let lastSpeed = speed;
-  let arrow = ' ';
+  let arrow = " ";
   
+  // Вычисление изменения скорости
   $: {
     arrow = speed > lastSpeed ? '➡' : speed < lastSpeed ? '⬅' : '•';
     lastSpeed = speed;

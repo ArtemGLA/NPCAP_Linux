@@ -8,25 +8,18 @@
   
   export let data: TelemetryData;
   
+  //Цвет высоты, батареи, качества связи
   $: altitudeColor = getAltitudeColor(data.altitude);
   $: batteryColor = getBatteryColor(data.battery);
   $: gpsQuality = getGpsQuality(data.satellites);
-
-  let lastSpeed = data.speed;
-  let speedArrow = ' ';
-  
-  $: {
-    speedArrow = data.speed > lastSpeed ? '>' : data.speed < lastSpeed ? '<' : ' ';
-    lastSpeed = data.speed;
-  }
 
 </script>
 
 <div class="telemetry-panel">
   <h2>TELEMETRY PANEL</h2>
   
-  
   <div class="gauges">
+
     <!-- Индикатор высоты -->
     <AltitudeGauge altitude={data.altitude} color={altitudeColor}/>
     
@@ -35,8 +28,10 @@
     
     <!-- Индикатор батареи -->
      <BatteryGauge color={batteryColor} battery={data.battery}/>
+  
   </div>
   
+  <!-- Местонахождение и спутники -->
   <div class="info">
     <div class="gps">
       GPS: {data.lat.toFixed(4)}, {data.lon.toFixed(4)}

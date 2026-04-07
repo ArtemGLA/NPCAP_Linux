@@ -3,12 +3,12 @@
   export let battery: number;
   export let color: string;
   
-  $: roundedBattery = Math.round(battery);
+  $: formattedBattery = battery.toFixed(1);
 </script>
 
   <div class="gauge battery" style="--battery-color: {color}">
     <span class="label">BATTERY</span>
-    <span class="value">{battery.toFixed(1)}%</span>
+    <span class="value">{formattedBattery}%</span>
     <div class="bar-background">
       <div class="bar" style="--bar-width: {battery}%"></div>
     </div>
