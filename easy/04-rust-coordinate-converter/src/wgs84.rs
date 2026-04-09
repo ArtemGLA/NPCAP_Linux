@@ -2,7 +2,6 @@ use crate::utm::{Hemisphere, UTM};  // ← импорт из другого мо
 use crate::errors::CoordinateError;
 
 const WGS84_A: f64 = 6378137.0; // большая полуось (м)
-const WGS84_F: f64 = 1.0 / 298.257223563; // сплюснутость
 const WGS84_E: f64 = 0.0818191908426; // эксцентриситет
 const WGS84_E2: f64 = WGS84_E * WGS84_E; // квадрат эксцентриситета
 const UTM_K0: f64 = 0.9996; // масштабный коэффициент UTM

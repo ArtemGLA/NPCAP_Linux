@@ -10,6 +10,7 @@
 
 namespace mavlink {
 
+// Вычисление CRC по одному байту
 uint16_t crc_accumulate(uint8_t data, uint16_t crc) {
     uint8_t tmp = data ^ (crc & 0xFF);
     tmp ^= (tmp << 4);
@@ -64,6 +65,7 @@ void MAVLinkValidator::reset() {
     missed_count_ = 0;
 }
 
+// Получение CRC_EXTRA по словарю
 std::optional<uint8_t> MAVLinkValidator::getCrcExtra(uint8_t message_id) const {
     auto it = crc_extra_table_.find(message_id);
     if (it != crc_extra_table_.end()) {
@@ -72,56 +74,52 @@ std::optional<uint8_t> MAVLinkValidator::getCrcExtra(uint8_t message_id) const {
     return std::nullopt;
 }
 
+// Полное вычисление CRC, алгоритм X.25 CRC
 uint16_t MAVLinkValidator::calculateCrc(const std::vector<uint8_t>& data, uint8_t crc_extra) const {
     uint16_t crc = 0xFFFF;
     for (uint8_t byte : data) {
         crc = crc_accumulate(byte, crc);
     }
     crc = crc_accumulate(crc_extra, crc);
-    // MAVLink передает CRC в little-endian: байты меняются местами относительно uint16_t
-    return (crc >> 8) | (crc << 8);
+    return crc;
 }
 
 std::optional<MAVLinkMessage> MAVLinkValidator::parse(const std::vector<uint8_t>& data) {
-    // 1. Минимальная длина: заголовок (6 байт) + CRC (2 байта) = 8 байт
-    const size_t HEADER = 6;
-    const size_t CRC = 2;
-    const size_t HEADER_AND_CRC = HEADER + CRC;
-    if (data.size() < HEADER_AND_CRC) {
+    // Проверка минимальной длины пакета
+    if (data.size() < MAVLINK_HEADER_SIZE + MAVLINK_CRC_SIZE) {
         return std::nullopt;
     }
 
-    // 2. Извлекаем magic (байт 0)
+    // Извлечение magic
     uint8_t magic = data[0];
-    if (magic != 0xFE) {  
+    if (magic != MAVLINK_STX_V1) {  
         return std::nullopt;
     }
     
-    // 3. Извлекаем length (байт 1)
+    // Извлечение length
     uint8_t length = data[1];
     
-    // 4. Проверяем, что данных достаточно
-    size_t expected_size = 6 + length + 2; 
-    if (data.size() < expected_size) {
+    // Проверка достаточности данных
+    size_t expected_size = MAVLINK_HEADER_SIZE + length + MAVLINK_CRC_SIZE; 
+    if (data.size() != expected_size) {
         return std::nullopt;
     }
     
-    // 5. Извлекаем остальные поля заголовка
+    // Извлечение остального HEADER
     uint8_t sequence = data[2];
     uint8_t system_id = data[3];
     uint8_t component_id = data[4];
     uint8_t message_id = data[5];
     
-    // 6. Извлекаем payload
-    const size_t PAYLOAD_OFFSET = 6;  
-    std::vector<uint8_t> payload(data.begin() + PAYLOAD_OFFSET, 
-                                   data.begin() + PAYLOAD_OFFSET + length);
+    // Извлечение Payload 
+    std::vector<uint8_t> payload(data.begin() + MAVLINK_HEADER_SIZE, 
+                                   data.begin() + MAVLINK_HEADER_SIZE + length);
     
-    // 7. Извлекаем CRC
-    size_t crc_offset = PAYLOAD_OFFSET + length;
+    // Извлечение CRC
+    size_t crc_offset = MAVLINK_HEADER_SIZE + length + MAVLINK_CRC_SIZE;
     uint16_t received_crc = data[crc_offset] | (data[crc_offset + 1] << 8);
     
-    // Создаем сообщение
+    // Создание сообщения
     MAVLinkMessage message;
     message.magic = magic;
     message.length = length;
@@ -132,30 +130,23 @@ std::optional<MAVLinkMessage> MAVLinkValidator::parse(const std::vector<uint8_t>
     message.payload = payload;
     message.crc = received_crc;
     
-    // Валидируем сообщение
-    ValidationResult result = validate(message);
-    if (result != ValidationResult::Valid) {
-        return std::nullopt;
-    }
-    
     return message;
 }
-
+  
 ValidationResult MAVLinkValidator::validate(const MAVLinkMessage& msg) {
-    // 1. Magic byte должен быть 0xFE
-    if (msg.magic != 0xFE) {
+    // Проверка STX
+    if (msg.magic != MAVLINK_STX_V1) {
         return ValidationResult::InvalidMagic;
     }
     
-    // 2. Message ID должен быть в таблице crc_extra_table_
+    // Проверка Message ID
     auto crc_extra_opt = getCrcExtra(msg.message_id);
     if (!crc_extra_opt.has_value()) {
         return ValidationResult::UnknownMessageId;
     }
     uint8_t crc_extra = crc_extra_opt.value();
     
-    // 3. CRC должна совпадать с вычисленной
-    // ВАЖНО: Начинаем с length (байт 1), НЕ включаем magic (байт 0)
+    // Создание вектора байтов для вычисления CRC
     std::vector<uint8_t> crc_data;
     crc_data.push_back(msg.length);
     crc_data.push_back(msg.sequence);
@@ -164,32 +155,26 @@ ValidationResult MAVLinkValidator::validate(const MAVLinkMessage& msg) {
     crc_data.push_back(msg.message_id);
     crc_data.insert(crc_data.end(), msg.payload.begin(), msg.payload.end());
     
+    // Вычисление CRC
     uint16_t calculated_crc = calculateCrc(crc_data, crc_extra);
-    
     if (calculated_crc != msg.crc) {
         return ValidationResult::InvalidCRC;
     }
     
-    // 4. System ID должен совпадать (если expected_system_id_ != 0)
+    // Проверка System ID
     if (expected_system_id_ != 0 && msg.system_id != expected_system_id_) {
         return ValidationResult::InvalidSystemId;
     }
     
-    // 5. Sequence должен быть последовательным (если check_sequence_ == true)
+    // Проверка Sequence
     if (check_sequence_) {
         if (!first_message_) {
-            uint8_t expected_seq = (last_sequence_ + 1) & 0xFF;
+            uint8_t expected_seq = (last_sequence_ + 1);
             if (msg.sequence != expected_seq) {
-                // Подсчет пропущенных сообщений
-                if (msg.sequence > expected_seq) {
-                    missed_count_ += (msg.sequence - expected_seq);
-                } else {
-                    missed_count_ += (256 - expected_seq + msg.sequence);
-                }
+                return ValidationResult::InvalidSequence;
             }
         }
-        last_sequence_ = msg.sequence;
-        first_message_ = false;
+        reset();
     }
     
     return ValidationResult::Valid;

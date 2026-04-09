@@ -28,6 +28,10 @@ private slots:
     /// Загрузить схему параметров.
     void loadSchema();
     
+    void resetSelectedToDefault();
+void about();
+void loadSchemaFromPath(const QString& path);
+    
     /// Сохранить текущий профиль.
     void saveProfile();
     
@@ -52,6 +56,8 @@ private slots:
 private:
     /// Настройка UI элементов.
     void setupUI();
+    
+    void closeEvent(QCloseEvent* event) override;
     
     /// Создание меню.
     void setupMenuBar();

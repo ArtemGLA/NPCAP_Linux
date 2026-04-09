@@ -1,6 +1,6 @@
 const EARTH_RADIUS: f64 = 6371000.0;
 use std::f64::consts::PI;
-use coordinate_converter::{WGS84, UTM, Hemisphere, CoordinateError};
+use coordinate_converter::{WGS84, Hemisphere, CoordinateError};
 
 #[test]
 fn test_wgs84_creation() {
