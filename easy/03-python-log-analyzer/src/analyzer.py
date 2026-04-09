@@ -282,7 +282,7 @@ def generate_report(anomalies: Dict[str, List[Dict]],
                         f"{anomaly['satellites']} satellites, fix_type={anomaly['fix_type']}"
                     )
                 
-                # Батаррея
+                # Батарея
                 elif key == 'battery':
                     reason_text = "Low voltage" if anomaly['reason'] == 'low_voltage' else "Low charge"
                     lines.append(

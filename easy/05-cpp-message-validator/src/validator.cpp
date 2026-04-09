@@ -73,17 +73,13 @@ std::optional<uint8_t> MAVLinkValidator::getCrcExtra(uint8_t message_id) const {
 }
 
 uint16_t MAVLinkValidator::calculateCrc(const std::vector<uint8_t>& data, uint8_t crc_extra) const {
-    
     uint16_t crc = 0xFFFF;
-    
-        for (uint8_t byte : data) {
+    for (uint8_t byte : data) {
         crc = crc_accumulate(byte, crc);
-        }
-        
-        crc ^= crc_extra;
-        //crc = crc_accumulate(crc_extra, crc);
-    
-    return crc;
+    }
+    crc = crc_accumulate(crc_extra, crc);
+    // MAVLink передает CRC в little-endian: байты меняются местами относительно uint16_t
+    return (crc >> 8) | (crc << 8);
 }
 
 std::optional<MAVLinkMessage> MAVLinkValidator::parse(const std::vector<uint8_t>& data) {
@@ -159,6 +155,7 @@ ValidationResult MAVLinkValidator::validate(const MAVLinkMessage& msg) {
     uint8_t crc_extra = crc_extra_opt.value();
     
     // 3. CRC должна совпадать с вычисленной
+    // ВАЖНО: Начинаем с length (байт 1), НЕ включаем magic (байт 0)
     std::vector<uint8_t> crc_data;
     crc_data.push_back(msg.length);
     crc_data.push_back(msg.sequence);
@@ -168,9 +165,8 @@ ValidationResult MAVLinkValidator::validate(const MAVLinkMessage& msg) {
     crc_data.insert(crc_data.end(), msg.payload.begin(), msg.payload.end());
     
     uint16_t calculated_crc = calculateCrc(crc_data, crc_extra);
+    
     if (calculated_crc != msg.crc) {
-        std::cout << calculated_crc << std::hex << std::endl;
-        std::cout << msg.crc << std::hex << std::endl;
         return ValidationResult::InvalidCRC;
     }
     
@@ -200,15 +196,11 @@ ValidationResult MAVLinkValidator::validate(const MAVLinkMessage& msg) {
 }
 
 ValidationResult MAVLinkValidator::validateRaw(const std::vector<uint8_t>& data) {
-    // TODO: Реализуйте комбинированную функцию
-    //
-    // 1. Вызвать parse()
-    // 2. Если parse вернул nullopt, вернуть InvalidLength
-    // 3. Вызвать validate() на результате
-    
-    // Ваш код здесь
-    
-    return ValidationResult::InvalidLength;
+    auto msg_opt = parse(data);
+    if (!msg_opt.has_value()) {
+        return ValidationResult::InvalidLength;
+    }
+    return validate(msg_opt.value());
 }
 
 }  // namespace mavlink

@@ -61,7 +61,7 @@ def parse_mavlink_file(filepath: str) -> list[dict]:
     while i < data_len:
 
         # Поиск стартового байта пакета 0xFE
-        if data[i] != 0xFE:
+        if data[i] != MAVLINK_STX_V1:
             i += 1
             continue
         
