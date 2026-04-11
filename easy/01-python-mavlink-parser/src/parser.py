@@ -4,7 +4,11 @@ MAVLink Parser - парсер бинарных MAVLink лог-файлов.
 Задание: реализуйте функции для парсинга MAVLink сообщений
 и извлечения телеметрических данных.
 """
-
+import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Qt5Agg')
+import json
+import numpy as np
 import math
 import struct
 from typing import Any
@@ -306,6 +310,68 @@ def calculate_flight_stats(gps_data: list[dict], speed_data: list[dict]) -> dict
 
     return stats
 
+def visualize_flight_3d(gps_data):
+    """ Построение графика
+    
+    Args:
+        gps_data: данные GPS от extract_gps_data()
+        
+    Returns:
+        None
+    """
+    
+    # Создание списков
+    # Извлечение долготы ширины высоты
+    lons = [data['lon'] for data in gps_data]
+    lats = [data['lat'] for data in gps_data]
+    alts = [data['relative_alt'] for data in gps_data]
+    
+    # Создание графика
+    fig = plt.figure(figsize=(10, 8))
+    ax = fig.add_subplot(111, projection='3d')
+    
+    # Долгота, ширина, высота, жирность линии, цвет
+    ax.plot(lons, lats, alts, linewidth=2, color='blue')
+    
+    # Подписи осей
+    ax.set_xlabel('Долгота')
+    ax.set_ylabel('Широта')
+    ax.set_zlabel('Высота (м)')
+    ax.set_title('Траектория полёта')
+    
+    plt.show()
+
+def export_to_geojson_simple(gps_data, output_file):
+    """Создание GeoJson
+    
+    Args:
+        gps_data: данные GPS от extract_gps_data()
+        output_file: строка, название файла
+
+    Returns:
+        None
+    """
+
+    # Список из долготы, ширины, высоты
+    coordinates = [[data['lon'], data['lat'], data['relative_alt']] for data in gps_data]
+    
+
+    geojson = {
+        "type": "Feature",
+        "geometry": {
+            "type": "LineString",
+            "coordinates": coordinates
+        },
+        "properties": {
+            "name": "Траектория полёта"
+        }
+    }
+    
+    with open(output_file, 'w') as f:
+        json.dump(geojson, f, indent=2)
+    
+    print(f"Сохранено в {output_file}")
+
 def main():
     """Пример использования парсера."""
     import os
@@ -337,6 +403,15 @@ def main():
     print(f"  Макс. скорость: {stats['max_speed']:.1f} м/с")
     print(f"  Пройдено: {stats['distance']:.1f} м")
 
+    #ДОПОЛНИТЕЛЬНЫЙ БЛОК
+
+    # Экспорт в GeoJSON траектории дрона
+    export_to_geojson_simple(gps_data, 'DroneMap.geojson')
+
+    # Визуализация
+    visualize_flight_3d(gps_data)
+
+    #MAVLINK 2.0 нет, не хватает времени на реализацию
 
 if __name__ == '__main__':
     main()
