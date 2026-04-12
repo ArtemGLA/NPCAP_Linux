@@ -39,9 +39,25 @@
       isSimulating = true;
     }
   }
+
+//Темная светлая тема
+let darkTheme = true;  
+function toggleTheme() {
+  darkTheme = !darkTheme;
+  if (darkTheme) {
+    document.body.classList.remove('light-theme');
+  } else {
+    document.body.classList.add('light-theme');
+  }
+}
+
 </script>
 
 <main>
+  <button class="theme-btn" on:click={toggleTheme}>
+    {darkTheme ? '🌙' : '☀️'}
+  </button>
+
   <h1>Telemetry Display Demo</h1>
   
   <TelemetryPanel data={telemetry} />
@@ -63,8 +79,8 @@
       </label>
       
       <label>
-        Battery: {telemetry.battery}%
-        <input type="range" min="0" max="100" bind:value={telemetry.battery} />
+        Battery: {telemetry.battery.toFixed(1)}%
+        <input type="range" min="0" max="100" step="0.1" bind:value={telemetry.battery} />
       </label>
       
       <label>
@@ -94,23 +110,39 @@
 </main>
 
 <style>
-  :global(body) {
-    margin: 0;
-    padding: 0;
-    background: #0f0f23;
-    min-height: 100vh;
-  }
-  
-  :global(:root) {
-    --bg-secondary: #1a1a2e;
-    --bg-tertiary: #16213e;
-    --text-primary: #ffffff;
-    --text-secondary: #888888;
-    --border-color: #333333;
-    --color-success: #4ade80;
-    --color-warning: #facc15;
-    --color-danger: #f87171;
-  }
+:global(body) {
+  margin: 0;
+  padding: 0;
+  background: #0f0f23;
+  min-height: 100vh;
+  transition: background 0.2s;
+}
+
+:global(:root) {
+  --bg-secondary: #1a1a2e;
+  --bg-tertiary: #16213e;
+  --text-primary: #ffffff;
+  --text-secondary: #888888;
+  --border-color: #333333;
+  --color-success: #4ade80;
+  --color-warning: #facc15;
+  --color-danger: #f87171;
+}
+
+:global(body.light-theme) {
+  background: #2a2a3e;
+}
+
+:global(body.light-theme) {
+  --bg-secondary: #3a3a4e;
+  --bg-tertiary: #35354a;
+  --text-primary: #f0f0f0;
+  --text-secondary: #c0c0c0;
+  --border-color: #555555;
+  --color-success: #4ade80;
+  --color-warning: #facc15;
+  --color-danger: #f87171;
+}
   
   main {
     max-width: 600px;
@@ -142,10 +174,18 @@
     cursor: pointer;
   }
   
+  
   button:disabled {
     background: #666;
     cursor: not-allowed;
   }
+
+  .theme-btn {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+}
   
   .sliders {
     display: flex;

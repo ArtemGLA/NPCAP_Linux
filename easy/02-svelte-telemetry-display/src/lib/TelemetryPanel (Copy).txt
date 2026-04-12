@@ -16,9 +16,7 @@
 </script>
 
 <div class="telemetry-panel">
-  
-<div><h2>TELEMETRY PANEL</h2> 
-</div>
+  <h2>TELEMETRY PANEL</h2>
   
   <div class="gauges">
 
