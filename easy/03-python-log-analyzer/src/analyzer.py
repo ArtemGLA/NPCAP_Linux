@@ -3,6 +3,9 @@ Flight Log Analyzer - анализатор полётных логов для о
 """
 
 import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Qt5Agg')
 import numpy as np
 from typing import Any, Dict, List, Optional
 
@@ -305,11 +308,159 @@ def generate_report(anomalies: Dict[str, List[Dict]],
                     )
         
         lines.append("")
-    
-    lines.append("=== END OF REPORT ===")
+
+    if df is not None:
+        params = ['relative_alt', 'groundspeed', 'battery_voltage', 'battery_remaining', 'satellites', 'roll', 'pitch']
+        lines.append("\n=== СТАТИСТИЧЕСКИЙ АНАЛИЗ ===")
+        lines.append(f"{'Параметр':<20} {'Среднее':>10} {'Медиана':>10} {'Отклонение':>15}")
+        lines.append("-" * 60)
+        
+        for param in params:
+            if param in df.columns:
+                mean_val = df[param].mean()
+                median_val = df[param].median()
+                std_val = df[param].std()
+                lines.append(f"{param:<20} {mean_val:>10.2f} {median_val:>10.2f} {std_val:>15.2f}")
+
+        lines.append("=== END OF REPORT ===")
     
     return "\n".join(lines)
 
+def save_to_json(anomalies: Dict[str, List[Dict]], df: pd.DataFrame, filename: str = 'flight_report.json') -> None:
+    """
+    Сохраняет отчёт об аномалиях и статистику в JSON файл.
+    """
+    import json
+    import numpy as np
+    
+    def convert_to_native(obj):
+        """Рекурсивно конвертирует numpy типы в Python native."""
+        if isinstance(obj, (np.int64, np.int32, np.int16, np.int8)):
+            return int(obj)
+        elif isinstance(obj, (np.float64, np.float32, np.float16)):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, dict):
+            return {k: convert_to_native(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [convert_to_native(item) for item in obj]
+        else:
+            return obj
+    
+    # Параметры для статистики
+    params = ['relative_alt', 'groundspeed', 'battery_voltage', 'battery_remaining', 'satellites', 'roll', 'pitch']
+    
+    # Собираем статистику
+    statistics = {}
+    for param in params:
+        if param in df.columns:
+            statistics[param] = {
+                'mean': float(df[param].mean()),
+                'median': float(df[param].median()),
+                'std': float(df[param].std()),
+                'min': float(df[param].min()),
+                'max': float(df[param].max())
+            }
+    
+    # Формируем отчёт
+    report = {
+        'total_records': int(len(df)),
+        'flight_duration_seconds': float(df['timestamp'].iloc[-1] - df['timestamp'].iloc[0]),
+        'statistics': statistics,
+        'anomalies': {
+            'altitude': anomalies['altitude'],
+            'gps': anomalies['gps'],
+            'battery': anomalies['battery'],
+            'speed': anomalies['speed'],
+            'attitude': anomalies['attitude']
+        },
+        'anomaly_counts': {
+            'altitude': len(anomalies['altitude']),
+            'gps': len(anomalies['gps']),
+            'battery': len(anomalies['battery']),
+            'speed': len(anomalies['speed']),
+            'attitude': len(anomalies['attitude'])
+        }
+    }
+    
+    # Конвертируем все numpy типы
+    report = convert_to_native(report)
+    
+    # Сохраняем
+    with open(filename, 'w', encoding='utf-8') as f:
+        json.dump(report, f, indent=2, ensure_ascii=False)
+    
+    print(f"✅ Отчёт сохранён в файл: {filename}")
+    
+
+def plot_anomalies_simple(df: pd.DataFrame, anomalies: Dict[str, List[Dict]]) -> None:
+    """
+    Простой график аномалий.
+    """
+    
+    # Создаём массив для индикаторов
+    n = len(df)
+    time_seconds = (df['timestamp'] - df['timestamp'].iloc[0]).values
+    
+    # Создаём индикаторы для каждого типа аномалий
+    indicators = {
+        'altitude': np.zeros(n),
+        'gps': np.zeros(n),
+        'battery': np.zeros(n),
+        'speed': np.zeros(n),
+        'attitude': np.zeros(n)
+    }
+    
+    # Отмечаем аномалии
+    for anomaly in anomalies['altitude']:
+        idx = df[df['timestamp'] == anomaly['timestamp']].index[0]
+        indicators['altitude'][idx] = 1
+    
+    for anomaly in anomalies['gps']:
+        idx = df[df['timestamp'] == anomaly['timestamp']].index[0]
+        indicators['gps'][idx] = 1
+    
+    for anomaly in anomalies['battery']:
+        idx = df[df['timestamp'] == anomaly['timestamp']].index[0]
+        indicators['battery'][idx] = 1
+    
+    for anomaly in anomalies['speed']:
+        idx = df[df['timestamp'] == anomaly['timestamp']].index[0]
+        indicators['speed'][idx] = 1
+    
+    for anomaly in anomalies['attitude']:
+        idx = df[df['timestamp'] == anomaly['timestamp']].index[0]
+        indicators['attitude'][idx] = 1
+    
+    # Создаём график
+    fig, ax = plt.subplots(figsize=(12, 3))
+    
+    # Собираем все индикаторы в матрицу
+    matrix = np.array([
+        indicators['altitude'],
+        indicators['gps'],
+        indicators['battery'],
+        indicators['speed'],
+        indicators['attitude']
+    ])
+    
+    # Рисуем цветную карту
+    im = ax.imshow(matrix, aspect='auto', cmap='RdYlGn_r', 
+                   extent=[time_seconds[0], time_seconds[-1], -0.5, 4.5])
+    
+    # Настройки
+    ax.set_yticks([0, 1, 2, 3, 4])
+    ax.set_yticklabels(['Наклон', 'Скорость', 'Батарея', 'GPS', 'Высота'])
+    ax.set_xlabel('Индекс')
+    ax.set_title('Аномалии полёта')
+    
+    # Цветовая шкала
+    cbar = plt.colorbar(im, ticks=[0, 1])
+    cbar.set_ticklabels(['Норма', 'Аномалия'])
+    
+    plt.tight_layout()
+    plt.show()
 
 def main():
     """Пример использования анализатора."""
@@ -346,6 +497,12 @@ def main():
     report = generate_report(anomalies, df)
     print(report)
 
+    # Дополнительные задания
+    # Сохранение JSON
+    save_to_json(anomalies, df, 'flight_report.json')
+
+    # Построение графика
+    plot_anomalies_simple(df, anomalies)
 
 if __name__ == '__main__':
     main()

@@ -249,13 +249,6 @@ def calculate_flight_stats(gps_data: list[dict], speed_data: list[dict]) -> dict
         - distance: общее пройденное расстояние (м)
         - duration: длительность полёта (с)
     """
-    # TODO: Реализуйте расчёт статистики
-    #
-    # Подсказка:
-    # 1. Для высоты используйте relative_alt из gps_data
-    # 2. Для скорости используйте groundspeed из speed_data
-    # 3. Для расстояния суммируйте haversine_distance между последовательными точками
-    # 4. Для длительности используйте разницу timestamp первой и последней точки
     
     stats = {
         'max_altitude': 0.0,

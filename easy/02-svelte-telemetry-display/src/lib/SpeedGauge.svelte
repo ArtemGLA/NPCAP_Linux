@@ -4,11 +4,6 @@
   let lastSpeed = speed;
   let arrow = " ";
   let history: number[] = [];
-
-    // Инициализируем историю с текущей скоростью
-  for (let i = 0; i < 100; i++) {
-    history.push(0);
-  }
   
   // Вычисление изменения скорости
   $: {
