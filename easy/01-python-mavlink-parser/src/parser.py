@@ -404,7 +404,5 @@ def main():
     # Визуализация
     visualize_flight_3d(gps_data)
 
-    #MAVLINK 2.0 нет, не хватает времени на реализацию
-
 if __name__ == '__main__':
     main()

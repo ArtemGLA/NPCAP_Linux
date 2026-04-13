@@ -5,6 +5,7 @@ Flight Log Analyzer - анализатор полётных логов для о
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib
+import json
 matplotlib.use('Qt5Agg')
 import numpy as np
 from typing import Any, Dict, List, Optional
@@ -326,13 +327,18 @@ def generate_report(anomalies: Dict[str, List[Dict]],
     
     return "\n".join(lines)
 
-def save_to_json(anomalies: Dict[str, List[Dict]], df: pd.DataFrame, filename: str = 'flight_report.json') -> None:
+def save_to_json(anomalies: Dict[str, List[Dict]], df: pd.DataFrame, filename: str) -> None:
     """
-    Сохраняет отчёт об аномалиях и статистику в JSON файл.
-    """
-    import json
-    import numpy as np
+    Сохраняет отчёт об аномалиях и статистику в JSON файл..
     
+    Args:
+        anomalies: словарь с аномалиями по категориям
+        df: DataFrame
+        filename: название JSON файла
+        
+    Returns:
+        None
+    """
     def convert_to_native(obj):
         """Рекурсивно конвертирует numpy типы в Python native."""
         if isinstance(obj, (np.int64, np.int32, np.int16, np.int8)):
@@ -351,7 +357,7 @@ def save_to_json(anomalies: Dict[str, List[Dict]], df: pd.DataFrame, filename: s
     # Параметры для статистики
     params = ['relative_alt', 'groundspeed', 'battery_voltage', 'battery_remaining', 'satellites', 'roll', 'pitch']
     
-    # Собираем статистику
+    # Сбор статистики
     statistics = {}
     for param in params:
         if param in df.columns:
@@ -363,7 +369,7 @@ def save_to_json(anomalies: Dict[str, List[Dict]], df: pd.DataFrame, filename: s
                 'max': float(df[param].max())
             }
     
-    # Формируем отчёт
+    # Формирование JSON
     report = {
         'total_records': int(len(df)),
         'flight_duration_seconds': float(df['timestamp'].iloc[-1] - df['timestamp'].iloc[0]),
@@ -384,21 +390,27 @@ def save_to_json(anomalies: Dict[str, List[Dict]], df: pd.DataFrame, filename: s
         }
     }
     
-    # Конвертируем все numpy типы
+    # Конвертация из numpy типов в обычные Python
     report = convert_to_native(report)
     
-    # Сохраняем
     with open(filename, 'w', encoding='utf-8') as f:
         json.dump(report, f, indent=2, ensure_ascii=False)
     
-    print(f"✅ Отчёт сохранён в файл: {filename}")
+    print(f" Отчёт сохранён в файл: {filename}")
     
 
-def plot_anomalies_simple(df: pd.DataFrame, anomalies: Dict[str, List[Dict]]) -> None:
+def plot_anomalies(df: pd.DataFrame, anomalies: Dict[str, List[Dict]]) -> None:
     """
-    Простой график аномалий.
-    """
+    Построение графика аномалий
     
+    Args:
+        df: DataFrame
+        anomalies: словарь аномалий
+        
+    Returns:
+        None
+    """
+
     # Создаём массив для индикаторов
     n = len(df)
     time_seconds = (df['timestamp'] - df['timestamp'].iloc[0]).values
@@ -502,7 +514,7 @@ def main():
     save_to_json(anomalies, df, 'flight_report.json')
 
     # Построение графика
-    plot_anomalies_simple(df, anomalies)
+    plot_anomalies(df, anomalies)
 
 if __name__ == '__main__':
     main()

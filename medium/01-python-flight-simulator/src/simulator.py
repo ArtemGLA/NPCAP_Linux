@@ -141,65 +141,91 @@ class FlightSimulator:
     async def load_mission(self, filepath: str) -> bool:
         """
         Загрузить миссию из JSON файла.
-        
-        TODO: Реализуйте загрузку миссии
-        
-        Формат файла:
-        {
-            "home": {"lat": ..., "lon": ..., "alt": ...},
-            "waypoints": [{"lat": ..., "lon": ..., "alt": ..., "speed": ...}, ...]
-        }
-        
-        После загрузки:
-        - Установить home позицию в state
-        - Заполнить self.mission списком Waypoint
         """
-        # Ваш код здесь
+        try:
+            with open(filepath, 'r', encoding='utf-8') as file:
+                data = json.load(file)
+
+            if 'home' in data:
+                self.state.home_lat = data['home']['lat']
+                self.state.home_lon = data['home']['lon']
+                self.state.lat = data['home']['lat']
+                self.state.lon = data['home']['lon']
+                self.state.alt = data['home']['alt']
+
+                self.mission = []
+                for wp in data['waypoints']:
+                    waypoint = Waypoint(
+                        lat=wp['lat'],
+                        lon=wp['lon'],
+                        alt=wp['alt'],
+                        speed=wp['speed']
+                    )
+                    self.mission.append(waypoint)
+                
+                self.current_wp = 0
+                print(f"Mission loaded: {len(self.mission)} waypoints")
+                return True
         
-        return False
+        except Exception as e:
+            return False
     
     def arm(self) -> bool:
         """
         Армировать дрон.
-        
-        TODO: Реализуйте армирование
-        
-        Условия:
-        - Нельзя армировать если уже армирован
-        - После армирования: armed=True, mode="GUIDED"
         """
-        # Ваш код здесь
+        if self.state.armed:
+            print("Drone already armed")
+            return False
         
-        return False
+        self.state.armed = True
+        self.state.mode = "GUIDED"
+        print("Drone armed")
+        return True
     
     def disarm(self) -> bool:
         """
         Дизармировать дрон.
         
         TODO: Реализуйте дизармирование
-        
-        Условия:
-        - Нельзя дизармировать в воздухе (alt > 1м)
-        - После дизармирования: armed=False, mode="STABILIZE"
         """
-        # Ваш код здесь
+        if not self.state.armed:
+            print("Drone already disarmed")
+            return False
         
-        return False
+        # Проверка: нельзя дизармить в воздухе
+        if self.state.alt > 1.0:
+            print("Cannot disarm: drone is in air")
+            return False
+        
+        self.state.armed = False  # ✅ Правильно
+        self.state.mode = "STABILIZE"  # ✅ Правильный режим
+        self.state.vx = 0  # Останавливаем движение
+        self.state.vy = 0
+        self.state.vz = 0
+        print("Drone disarmed")
+        return True
     
     def start_mission(self) -> bool:
         """
         Начать выполнение миссии.
-        
-        TODO: Реализуйте запуск миссии
-        
-        Условия:
-        - Должен быть армирован
-        - Должна быть загружена миссия
-        - После запуска: mode="AUTO", mission_active=True
         """
-        # Ваш код здесь
+        if not self.state.armed:
+            print("Cannot start mission: drone not armed")
+            return False
         
-        return False
+        if not self.mission:
+            print("Cannot start mission: no mission loaded")
+            return False
+        
+        if self.mission_active:
+            print("Mission already active")
+            return False
+        
+        self.mission_active = True
+        self.state.mode = "AUTO"
+        print("Mission started")
+        return True
     
     def pause_mission(self):
         """Приостановить миссию."""
@@ -257,7 +283,97 @@ class FlightSimulator:
         if not self.mission_active or self.paused:
             return
         
-        # Ваш код здесь
+        # Проверка на оставшиеся точки
+        if self.current_wp >= len(self.mission):
+            self.mission_active = False
+            return
+        
+        # Загрузка координат точки
+        target = self.mission[self.current_wp]
+        
+        # Расчет расстояния по формуле Хаверсина
+        distance = self.haversine_distance(
+            self.state.lat, self.state.lon,
+            target.lat, target.lon
+        )
+
+        # Расчет расстояния с высотой упрощенной формулой при помощи формулы Пифагора
+        distance = math.sqrt(distance**2 + (self.state.alt - target.alt)**2)
+        
+        # Проверка на расстояние до радиуса точки
+        if distance < self.WP_RADIUS:
+            self.current_wp += 1
+            print(f"Waypoint {self.current_wp} reached")
+            return
+        
+        # Расчет направления дрона
+        bearing_rad = self.bearing(
+            self.state.lat, self.state.lon,
+            target.lat, target.lon
+        )
+        
+        # Желательная скорость
+        desired_speed = target.speed
+        
+        # Желательная скорость по координатам x и y
+        desired_speed_x = desired_speed * math.sin(bearing_rad)   # восток-запад
+        desired_speed_y = desired_speed * math.cos(bearing_rad)   # север-юг
+        
+        # Расчет разницы между желательной скоростью и текущей скоростью дрона
+        delta_vx = desired_speed_x - self.state.vx
+        delta_vy = desired_speed_y - self.state.vy
+        max_delta = self.ACCELERATION * dt
+
+        # Расчитывание ускорения для дрона
+        # Если разница между желательной и текущей скоростью
+        # ниже максимального ускорения, то ускорение будет равно
+        # разнице между желательной и текущей скоростью
+        if delta_vx > max_delta:
+            delta_vx = max_delta
+        elif delta_vx < -max_delta:
+            delta_vx = -max_delta
+
+        if delta_vy > max_delta:
+            delta_vy = max_delta
+        elif delta_vy < -max_delta:
+            delta_vy = -max_delta
+
+        # Изменение скорости по x и y
+        self.state.vx += delta_vx
+        self.state.vy += delta_vy
+
+        # Расчет разницы между высотой дрона и точки
+        alt_diff = target.alt - self.state.alt
+        max_vertical_change = self.CLIMB_RATE * dt
+
+        # Расчет изменения вертикальной скорости и направления
+        if abs(alt_diff) > max_vertical_change:
+            if alt_diff > 0:
+                self.state.vz = self.CLIMB_RATE  
+            else:
+                self.state.vz = -self.CLIMB_RATE  
+        else:
+            if dt > 0:
+                self.state.vz = alt_diff / dt
+            else:
+                self.state.vz = 0
+        
+        # Конвертация координат в долготу и широту
+        earth_radius = 6371000  # метры
+        lat_change = (self.state.vy * dt) / earth_radius
+        lon_change = (self.state.vx * dt) / (earth_radius * math.cos(math.radians(self.state.lat)))
+        
+        self.state.lat += math.degrees(lat_change)
+        self.state.lon += math.degrees(lon_change)
+        self.state.alt += self.state.vz * dt
+        
+        # Обновление скорости относительно земли и направления движения
+        self.state.groundspeed = math.sqrt(self.state.vx**2 + self.state.vy**2)
+        self.state.heading = int(math.degrees(bearing_rad)) % 360
+        
+        # Разряд батареи
+        self.state.battery -= 0.1 * dt
+        self.state.battery = max(0, self.state.battery)
         pass
     
     async def telemetry_loop(self):
