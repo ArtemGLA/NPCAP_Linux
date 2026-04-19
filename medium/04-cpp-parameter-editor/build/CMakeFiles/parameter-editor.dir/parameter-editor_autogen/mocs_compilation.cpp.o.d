@@ -275,6 +275,9 @@ CMakeFiles/parameter-editor.dir/parameter-editor_autogen/mocs_compilation.cpp.o:
  /usr/include/x86_64-linux-gnu/qt5/QtCore/qregularexpression.h \
  /usr/include/x86_64-linux-gnu/qt5/QtCore/qurl.h \
  /usr/include/x86_64-linux-gnu/qt5/QtCore/quuid.h \
+ /home/user/Desktop/NPCAP_Work/medium/04-cpp-parameter-editor/build/parameter-editor_autogen/UVLADIE3JM/../../../src/parametermodel.h \
+ /usr/include/x86_64-linux-gnu/qt5/QtCore/QAbstractTableModel \
+ /usr/include/x86_64-linux-gnu/qt5/QtCore/qabstractitemmodel.h \
  /usr/include/x86_64-linux-gnu/qt5/QtWidgets/QMainWindow \
  /usr/include/x86_64-linux-gnu/qt5/QtWidgets/qmainwindow.h \
  /usr/include/x86_64-linux-gnu/qt5/QtWidgets/qtwidgetsglobal.h \
@@ -341,4 +344,6 @@ CMakeFiles/parameter-editor.dir/parameter-editor_autogen/mocs_compilation.cpp.o:
  /usr/include/x86_64-linux-gnu/qt5/QtGui/qstandarditemmodel.h \
  /usr/include/x86_64-linux-gnu/qt5/QtCore/QSortFilterProxyModel \
  /usr/include/x86_64-linux-gnu/qt5/QtCore/qsortfilterproxymodel.h \
- /usr/include/x86_64-linux-gnu/qt5/QtCore/qabstractproxymodel.h
+ /usr/include/x86_64-linux-gnu/qt5/QtCore/qabstractproxymodel.h \
+ /home/user/Desktop/NPCAP_Work/medium/04-cpp-parameter-editor/build/parameter-editor_autogen/UVLADIE3JM/moc_parametermodel.cpp \
+ /home/user/Desktop/NPCAP_Work/medium/04-cpp-parameter-editor/build/parameter-editor_autogen/UVLADIE3JM/../../../src/parametermodel.h

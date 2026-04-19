@@ -8,6 +8,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/parameter-editor.dir/src/main.cpp.o.d"
   "CMakeFiles/parameter-editor.dir/src/mainwindow.cpp.o"
   "CMakeFiles/parameter-editor.dir/src/mainwindow.cpp.o.d"
+  "CMakeFiles/parameter-editor.dir/src/parametermodel.cpp.o"
+  "CMakeFiles/parameter-editor.dir/src/parametermodel.cpp.o.d"
   "CMakeFiles/parameter-editor.dir/src/parameterschema.cpp.o"
   "CMakeFiles/parameter-editor.dir/src/parameterschema.cpp.o.d"
   "parameter-editor"

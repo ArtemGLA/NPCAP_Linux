@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include "parameter.h"
+#include "parametermodel.h"
 
 #include <QMainWindow>
 #include <QTreeView>
@@ -21,6 +22,9 @@ private slots:
     /// Загрузить схему параметров.
     void loadSchema();
 
+    /// Обработчик выбора категории.
+    void onCategorySelected(const QModelIndex& index);
+
 private:
     /// Настройка UI элементов.
     void setupUI();
@@ -33,6 +37,7 @@ private:
 
     // Data
     ParameterSchema m_schema;
+    ParameterModel *m_parameterModel;
     QMap<QString, QVariant> m_currentValues;
     QMap<QString, QVariant> m_modifiedValues;
     QString m_currentProfilePath;

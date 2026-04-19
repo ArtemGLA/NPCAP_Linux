@@ -118,10 +118,24 @@ CMakeFiles/parameter-editor.dir/src/mainwindow.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/parameter-editor.dir/src/mainwindow.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/user/Desktop/NPCAP_Work/medium/04-cpp-parameter-editor/src/mainwindow.cpp -o CMakeFiles/parameter-editor.dir/src/mainwindow.cpp.s
 
+CMakeFiles/parameter-editor.dir/src/parametermodel.cpp.o: CMakeFiles/parameter-editor.dir/flags.make
+CMakeFiles/parameter-editor.dir/src/parametermodel.cpp.o: /home/user/Desktop/NPCAP_Work/medium/04-cpp-parameter-editor/src/parametermodel.cpp
+CMakeFiles/parameter-editor.dir/src/parametermodel.cpp.o: CMakeFiles/parameter-editor.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/user/Desktop/NPCAP_Work/medium/04-cpp-parameter-editor/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/parameter-editor.dir/src/parametermodel.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/parameter-editor.dir/src/parametermodel.cpp.o -MF CMakeFiles/parameter-editor.dir/src/parametermodel.cpp.o.d -o CMakeFiles/parameter-editor.dir/src/parametermodel.cpp.o -c /home/user/Desktop/NPCAP_Work/medium/04-cpp-parameter-editor/src/parametermodel.cpp
+
+CMakeFiles/parameter-editor.dir/src/parametermodel.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/parameter-editor.dir/src/parametermodel.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/user/Desktop/NPCAP_Work/medium/04-cpp-parameter-editor/src/parametermodel.cpp > CMakeFiles/parameter-editor.dir/src/parametermodel.cpp.i
+
+CMakeFiles/parameter-editor.dir/src/parametermodel.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/parameter-editor.dir/src/parametermodel.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/user/Desktop/NPCAP_Work/medium/04-cpp-parameter-editor/src/parametermodel.cpp -o CMakeFiles/parameter-editor.dir/src/parametermodel.cpp.s
+
 CMakeFiles/parameter-editor.dir/src/parameterschema.cpp.o: CMakeFiles/parameter-editor.dir/flags.make
 CMakeFiles/parameter-editor.dir/src/parameterschema.cpp.o: /home/user/Desktop/NPCAP_Work/medium/04-cpp-parameter-editor/src/parameterschema.cpp
 CMakeFiles/parameter-editor.dir/src/parameterschema.cpp.o: CMakeFiles/parameter-editor.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/user/Desktop/NPCAP_Work/medium/04-cpp-parameter-editor/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/parameter-editor.dir/src/parameterschema.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/user/Desktop/NPCAP_Work/medium/04-cpp-parameter-editor/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/parameter-editor.dir/src/parameterschema.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/parameter-editor.dir/src/parameterschema.cpp.o -MF CMakeFiles/parameter-editor.dir/src/parameterschema.cpp.o.d -o CMakeFiles/parameter-editor.dir/src/parameterschema.cpp.o -c /home/user/Desktop/NPCAP_Work/medium/04-cpp-parameter-editor/src/parameterschema.cpp
 
 CMakeFiles/parameter-editor.dir/src/parameterschema.cpp.i: cmake_force
@@ -137,6 +151,7 @@ parameter__editor_OBJECTS = \
 "CMakeFiles/parameter-editor.dir/parameter-editor_autogen/mocs_compilation.cpp.o" \
 "CMakeFiles/parameter-editor.dir/src/main.cpp.o" \
 "CMakeFiles/parameter-editor.dir/src/mainwindow.cpp.o" \
+"CMakeFiles/parameter-editor.dir/src/parametermodel.cpp.o" \
 "CMakeFiles/parameter-editor.dir/src/parameterschema.cpp.o"
 
 # External object files for target parameter-editor
@@ -145,13 +160,14 @@ parameter__editor_EXTERNAL_OBJECTS =
 parameter-editor: CMakeFiles/parameter-editor.dir/parameter-editor_autogen/mocs_compilation.cpp.o
 parameter-editor: CMakeFiles/parameter-editor.dir/src/main.cpp.o
 parameter-editor: CMakeFiles/parameter-editor.dir/src/mainwindow.cpp.o
+parameter-editor: CMakeFiles/parameter-editor.dir/src/parametermodel.cpp.o
 parameter-editor: CMakeFiles/parameter-editor.dir/src/parameterschema.cpp.o
 parameter-editor: CMakeFiles/parameter-editor.dir/build.make
 parameter-editor: /usr/lib/x86_64-linux-gnu/libQt5Widgets.so.5.15.13
 parameter-editor: /usr/lib/x86_64-linux-gnu/libQt5Gui.so.5.15.13
 parameter-editor: /usr/lib/x86_64-linux-gnu/libQt5Core.so.5.15.13
 parameter-editor: CMakeFiles/parameter-editor.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/user/Desktop/NPCAP_Work/medium/04-cpp-parameter-editor/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Linking CXX executable parameter-editor"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/user/Desktop/NPCAP_Work/medium/04-cpp-parameter-editor/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Linking CXX executable parameter-editor"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/parameter-editor.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

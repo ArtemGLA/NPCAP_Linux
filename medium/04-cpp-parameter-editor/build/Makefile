@@ -227,6 +227,30 @@ src/mainwindow.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/parameter-editor.dir/build.make CMakeFiles/parameter-editor.dir/src/mainwindow.cpp.s
 .PHONY : src/mainwindow.cpp.s
 
+src/parametermodel.o: src/parametermodel.cpp.o
+.PHONY : src/parametermodel.o
+
+# target to build an object file
+src/parametermodel.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parameter-editor.dir/build.make CMakeFiles/parameter-editor.dir/src/parametermodel.cpp.o
+.PHONY : src/parametermodel.cpp.o
+
+src/parametermodel.i: src/parametermodel.cpp.i
+.PHONY : src/parametermodel.i
+
+# target to preprocess a source file
+src/parametermodel.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parameter-editor.dir/build.make CMakeFiles/parameter-editor.dir/src/parametermodel.cpp.i
+.PHONY : src/parametermodel.cpp.i
+
+src/parametermodel.s: src/parametermodel.cpp.s
+.PHONY : src/parametermodel.s
+
+# target to generate assembly for a file
+src/parametermodel.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parameter-editor.dir/build.make CMakeFiles/parameter-editor.dir/src/parametermodel.cpp.s
+.PHONY : src/parametermodel.cpp.s
+
 src/parameterschema.o: src/parameterschema.cpp.o
 .PHONY : src/parameterschema.o
 
@@ -271,6 +295,9 @@ help:
 	@echo "... src/mainwindow.o"
 	@echo "... src/mainwindow.i"
 	@echo "... src/mainwindow.s"
+	@echo "... src/parametermodel.o"
+	@echo "... src/parametermodel.i"
+	@echo "... src/parametermodel.s"
 	@echo "... src/parameterschema.o"
 	@echo "... src/parameterschema.i"
 	@echo "... src/parameterschema.s"

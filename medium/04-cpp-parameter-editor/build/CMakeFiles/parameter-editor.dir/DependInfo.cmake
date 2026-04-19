@@ -12,6 +12,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/user/Desktop/NPCAP_Work/medium/04-cpp-parameter-editor/build/parameter-editor_autogen/mocs_compilation.cpp" "CMakeFiles/parameter-editor.dir/parameter-editor_autogen/mocs_compilation.cpp.o" "gcc" "CMakeFiles/parameter-editor.dir/parameter-editor_autogen/mocs_compilation.cpp.o.d"
   "/home/user/Desktop/NPCAP_Work/medium/04-cpp-parameter-editor/src/main.cpp" "CMakeFiles/parameter-editor.dir/src/main.cpp.o" "gcc" "CMakeFiles/parameter-editor.dir/src/main.cpp.o.d"
   "/home/user/Desktop/NPCAP_Work/medium/04-cpp-parameter-editor/src/mainwindow.cpp" "CMakeFiles/parameter-editor.dir/src/mainwindow.cpp.o" "gcc" "CMakeFiles/parameter-editor.dir/src/mainwindow.cpp.o.d"
+  "/home/user/Desktop/NPCAP_Work/medium/04-cpp-parameter-editor/src/parametermodel.cpp" "CMakeFiles/parameter-editor.dir/src/parametermodel.cpp.o" "gcc" "CMakeFiles/parameter-editor.dir/src/parametermodel.cpp.o.d"
   "/home/user/Desktop/NPCAP_Work/medium/04-cpp-parameter-editor/src/parameterschema.cpp" "CMakeFiles/parameter-editor.dir/src/parameterschema.cpp.o" "gcc" "CMakeFiles/parameter-editor.dir/src/parameterschema.cpp.o.d"
   )
 

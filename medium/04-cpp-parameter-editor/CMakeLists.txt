@@ -13,7 +13,7 @@ find_package(Qt5 REQUIRED COMPONENTS Widgets)
 set(SOURCES
     src/main.cpp
     src/mainwindow.cpp
-    # src/parametermodel.cpp
+    src/parametermodel.cpp
     # src/parameterdelegate.cpp
     src/parameterschema.cpp
 )
@@ -21,7 +21,7 @@ set(SOURCES
 set(HEADERS
     src/mainwindow.h
     src/parameter.h
-    # src/parametermodel.h
+    src/parametermodel.h
     # src/parameterdelegate.h
     # src/parameterschema.h
 )

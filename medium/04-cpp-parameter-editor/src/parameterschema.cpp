@@ -80,8 +80,8 @@ ParameterSchema ParameterSchema::load(const QString& filepath)
         schema.groups.append(parameterGroup);
     }
 
-    qDebug() << "Version:" << schema.version;
-    qDebug() << "Vehicle:" << schema.vehicle;
+    // qDebug() << "Version:" << schema.version;
+    // qDebug() << "Vehicle:" << schema.vehicle;
     
     // for (const auto& group : schema.groups) {
     //     qDebug() << "\n[Group]" << group.name << "-" << group.description;

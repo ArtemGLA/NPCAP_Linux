@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "parametermodel.h"
 
 #include <QMenuBar>
 #include <QToolBar>
@@ -60,7 +61,8 @@ void MainWindow::setupUI()
     // Таблица параметров
     m_parameterTable = new QTableView();
     // TODO: Создайте ParameterModel и установите его
-    // m_parameterModel = new ParameterModel(this);
+    m_parameterModel = new ParameterModel(this);
+    m_parameterTable->setModel(m_parameterModel);
     // m_filterModel = new QSortFilterProxyModel(this);
     // m_filterModel->setSourceModel(m_parameterModel);
     // m_parameterTable->setModel(m_filterModel);
@@ -85,6 +87,9 @@ void MainWindow::setupUI()
     splitter->setStretchFactor(1, 3);
     
     mainLayout->addWidget(splitter);
+
+    connect(m_categoryTree->selectionModel(), &QItemSelectionModel::currentChanged,
+        this, &MainWindow::onCategorySelected);
 }
 
     /// Создание меню.
@@ -114,14 +119,7 @@ void MainWindow::setupMenuBar()
 }
 
 void MainWindow::loadSchema()
-{
-    // TODO: Реализуйте загрузку схемы
-    //
-    // 1. Открыть диалог выбора файла
-    // 2. Загрузить JSON схему
-    // 3. Заполнить дерево категорий
-    // 4. Инициализировать значения по умолчанию
-    
+{    
     QString filepath = QFileDialog::getOpenFileName(
         this, "Open Schema", "", "JSON Files (*.json)"
     );
@@ -135,22 +133,44 @@ void MainWindow::loadSchema()
 }
 
 void MainWindow::populateCategories()
-{
-    // TODO: Заполнить дерево категорий из m_schema
-    //
-    // Для каждой группы создать QStandardItem
-    // Добавить подгруппы как дочерние элементы
-    
+{    
     m_categoryModel->clear();
-    auto* groupItem = new QStandardItem("DSDS");
-    m_categoryModel->appendRow(groupItem);
     
-    // for (const auto& group : m_schema.groups) {
-    //     auto* groupItem = new QStandardItem(group.name);
-    //     for (const auto& subgroup : group.subgroups) {
-    //         auto* subItem = new QStandardItem(subgroup.name);
-    //         groupItem->appendRow(subItem);
-    //     }
-    //     m_categoryModel->appendRow(groupItem);
-    // }
+    for (const auto& group : m_schema.groups) {
+        auto* groupItem = new QStandardItem(group.name);
+        for (const auto& subgroup : group.subgroups) {
+            auto* subItem = new QStandardItem(subgroup.name);
+            groupItem->appendRow(subItem);
+        }
+        m_categoryModel->appendRow(groupItem);
+    }
+}
+
+void MainWindow::onCategorySelected(const QModelIndex &current) {
+    if (!current.isValid()) return;
+    
+    // Получаем имена группы и подгруппы
+    QString subItemName = current.data().toString();  // "PID controller"
+    QString groupItemName = current.parent().data().toString();  // "PID"
+    
+    qDebug() << "Group:" << groupItemName;
+    qDebug() << "Subgroup:" << subItemName;
+    
+    // Ищем и выводим параметры
+    for (const auto& group : m_schema.groups) {
+        if (group.name == groupItemName) {
+            for (const auto& subgroup : group.subgroups) {
+                if (subgroup.name == subItemName) {
+                    qDebug() << "=== Parameters in" << subgroup.name << "===";
+                    for (const auto& param : subgroup.parameters) {
+                        qDebug() << "  -" << param.name 
+                                 << "|" << param.displayName
+                                 << "| Default:" << param.defaultValue
+                                 << "| Units:" << param.units;
+                    }
+                    return;
+                }
+            }
+        }
+    }
 }
